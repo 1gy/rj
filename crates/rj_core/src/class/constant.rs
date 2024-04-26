@@ -192,6 +192,16 @@ pub fn parse_invoke_dynamic(input: &[u8]) -> Result<(&[u8], Constant), ClassPars
     ))
 }
 
+pub fn parse_module(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+    let (input, name_index) = parser::be_u16(input)?;
+    Ok((input, Constant::Module { name_index }))
+}
+
+pub fn parse_package(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+    let (input, name_index) = parser::be_u16(input)?;
+    Ok((input, Constant::Package { name_index }))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -423,5 +433,21 @@ mod tests {
                 name_and_type_index: 0x5678
             }
         );
+    }
+
+    #[test]
+    fn test_parse_module() {
+        let input = [0x12, 0x34];
+        let (rest, constant) = parse_module(&input).unwrap();
+        assert_eq!(rest, &[]);
+        assert_eq!(constant, Constant::Module { name_index: 0x1234 });
+    }
+
+    #[test]
+    fn test_parse_package() {
+        let input = [0x12, 0x34];
+        let (rest, constant) = parse_package(&input).unwrap();
+        assert_eq!(rest, &[]);
+        assert_eq!(constant, Constant::Package { name_index: 0x1234 });
     }
 }
