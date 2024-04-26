@@ -93,6 +93,11 @@ pub fn parse_double(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> 
     Ok((input, Constant::Double { value }))
 }
 
+pub fn parse_class(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+    let (input, name_index) = parser::be_u16(input)?;
+    Ok((input, Constant::Class { name_index }))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -192,5 +197,13 @@ mod tests {
             result,
             Err(ClassParseError::ParseError(parser::ParseError::Eof))
         );
+    }
+
+    #[test]
+    fn test_parse_class() {
+        let input = [0x12, 0x34];
+        let (rest, constant) = parse_class(&input).unwrap();
+        assert_eq!(rest, &[]);
+        assert_eq!(constant, Constant::Class { name_index: 0x1234 });
     }
 }
