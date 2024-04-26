@@ -139,6 +139,18 @@ pub fn parse_interface_methodref(input: &[u8]) -> Result<(&[u8], Constant), Clas
     ))
 }
 
+pub fn parse_name_and_type(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+    let (input, name_index) = parser::be_u16(input)?;
+    let (input, descriptor_index) = parser::be_u16(input)?;
+    Ok((
+        input,
+        Constant::NameAndType {
+            name_index,
+            descriptor_index,
+        },
+    ))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -299,6 +311,20 @@ mod tests {
             Constant::InterfaceMethodref {
                 class_index: 0x1234,
                 name_and_type_index: 0x5678
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_name_and_type() {
+        let input = [0x12, 0x34, 0x56, 0x78];
+        let (rest, constant) = parse_name_and_type(&input).unwrap();
+        assert_eq!(rest, &[]);
+        assert_eq!(
+            constant,
+            Constant::NameAndType {
+                name_index: 0x1234,
+                descriptor_index: 0x5678
             }
         );
     }
