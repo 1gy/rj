@@ -103,6 +103,42 @@ pub fn parse_string(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> 
     Ok((input, Constant::String { string_index }))
 }
 
+pub fn parse_fieldref(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+    let (input, class_index) = parser::be_u16(input)?;
+    let (input, name_and_type_index) = parser::be_u16(input)?;
+    Ok((
+        input,
+        Constant::Fieldref {
+            class_index,
+            name_and_type_index,
+        },
+    ))
+}
+
+pub fn parse_methodref(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+    let (input, class_index) = parser::be_u16(input)?;
+    let (input, name_and_type_index) = parser::be_u16(input)?;
+    Ok((
+        input,
+        Constant::Methodref {
+            class_index,
+            name_and_type_index,
+        },
+    ))
+}
+
+pub fn parse_interface_methodref(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+    let (input, class_index) = parser::be_u16(input)?;
+    let (input, name_and_type_index) = parser::be_u16(input)?;
+    Ok((
+        input,
+        Constant::InterfaceMethodref {
+            class_index,
+            name_and_type_index,
+        },
+    ))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -221,6 +257,48 @@ mod tests {
             constant,
             Constant::String {
                 string_index: 0x1234
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_fieldref() {
+        let input = [0x12, 0x34, 0x56, 0x78];
+        let (rest, constant) = parse_fieldref(&input).unwrap();
+        assert_eq!(rest, &[]);
+        assert_eq!(
+            constant,
+            Constant::Fieldref {
+                class_index: 0x1234,
+                name_and_type_index: 0x5678
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_methodref() {
+        let input = [0x12, 0x34, 0x56, 0x78];
+        let (rest, constant) = parse_methodref(&input).unwrap();
+        assert_eq!(rest, &[]);
+        assert_eq!(
+            constant,
+            Constant::Methodref {
+                class_index: 0x1234,
+                name_and_type_index: 0x5678
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_interface_methodref() {
+        let input = [0x12, 0x34, 0x56, 0x78];
+        let (rest, constant) = parse_interface_methodref(&input).unwrap();
+        assert_eq!(rest, &[]);
+        assert_eq!(
+            constant,
+            Constant::InterfaceMethodref {
+                class_index: 0x1234,
+                name_and_type_index: 0x5678
             }
         );
     }
