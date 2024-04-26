@@ -151,6 +151,18 @@ pub fn parse_name_and_type(input: &[u8]) -> Result<(&[u8], Constant), ClassParse
     ))
 }
 
+pub fn parse_method_handle(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+    let (input, reference_kind) = parser::be_u8(input)?;
+    let (input, reference_index) = parser::be_u16(input)?;
+    Ok((
+        input,
+        Constant::MethodHandle {
+            reference_kind,
+            reference_index,
+        },
+    ))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -325,6 +337,20 @@ mod tests {
             Constant::NameAndType {
                 name_index: 0x1234,
                 descriptor_index: 0x5678
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_method_handle() {
+        let input = [0x01, 0x23, 0x45];
+        let (rest, constant) = parse_method_handle(&input).unwrap();
+        assert_eq!(rest, &[]);
+        assert_eq!(
+            constant,
+            Constant::MethodHandle {
+                reference_kind: 0x01,
+                reference_index: 0x2345
             }
         );
     }
