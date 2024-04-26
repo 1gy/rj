@@ -1,34 +1,34 @@
-use super::error::ParserError;
+use super::error::ParseError;
 
-pub fn bytes(input: &[u8], length: usize) -> Result<(&[u8], &[u8]), ParserError> {
+pub fn bytes(input: &[u8], length: usize) -> Result<(&[u8], &[u8]), ParseError> {
     if input.len() < length {
-        return Err(ParserError::Eof);
+        return Err(ParseError::Eof);
     }
     let (value, rest) = input.split_at(length);
     Ok((rest, value))
 }
 
-pub fn be_u8(input: &[u8]) -> Result<(&[u8], u8), ParserError> {
+pub fn be_u8(input: &[u8]) -> Result<(&[u8], u8), ParseError> {
     if input.is_empty() {
-        return Err(ParserError::Eof);
+        return Err(ParseError::Eof);
     }
     let value = input[0];
     let rest = &input[1..];
     Ok((rest, value))
 }
 
-pub fn be_u16(input: &[u8]) -> Result<(&[u8], u16), ParserError> {
+pub fn be_u16(input: &[u8]) -> Result<(&[u8], u16), ParseError> {
     if input.len() < 2 {
-        return Err(ParserError::Eof);
+        return Err(ParseError::Eof);
     }
     let value = u16::from_be_bytes([input[0], input[1]]);
     let rest = &input[2..];
     Ok((rest, value))
 }
 
-pub fn be_u32(input: &[u8]) -> Result<(&[u8], u32), ParserError> {
+pub fn be_u32(input: &[u8]) -> Result<(&[u8], u32), ParseError> {
     if input.len() < 4 {
-        return Err(ParserError::Eof);
+        return Err(ParseError::Eof);
     }
     let value = u32::from_be_bytes([input[0], input[1], input[2], input[3]]);
     let rest = &input[4..];
@@ -51,7 +51,7 @@ mod tests {
         assert_eq!(value, [1, 2, 3, 4, 5]);
 
         let result = bytes(&input, 6);
-        assert_eq!(result, Err(ParserError::Eof));
+        assert_eq!(result, Err(ParseError::Eof));
     }
 
     #[test]
@@ -62,7 +62,7 @@ mod tests {
         assert_eq!(value, 1);
 
         let result = be_u8(&[]);
-        assert_eq!(result, Err(ParserError::Eof));
+        assert_eq!(result, Err(ParseError::Eof));
     }
 
     #[test]
@@ -73,7 +73,7 @@ mod tests {
         assert_eq!(value, 0x1234);
 
         let result = be_u16(&[0x12]);
-        assert_eq!(result, Err(ParserError::Eof));
+        assert_eq!(result, Err(ParseError::Eof));
     }
 
     #[test]
@@ -84,6 +84,6 @@ mod tests {
         assert_eq!(value, 0x12345678);
 
         let result = be_u32(&[0x12, 0x34, 0x56]);
-        assert_eq!(result, Err(ParserError::Eof));
+        assert_eq!(result, Err(ParseError::Eof));
     }
 }
