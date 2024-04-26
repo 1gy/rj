@@ -83,6 +83,16 @@ pub fn parse_float(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
     Ok((input, Constant::Float { value }))
 }
 
+pub fn parse_long(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+    let (input, value) = parser::be_i64(input)?;
+    Ok((input, Constant::Long { value }))
+}
+
+pub fn parse_double(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+    let (input, value) = parser::be_f64(input)?;
+    Ok((input, Constant::Double { value }))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -143,6 +153,41 @@ mod tests {
 
         let input = [0x3f, 0x9d, 0xf3];
         let result = parse_float(&input);
+        assert_eq!(
+            result,
+            Err(ClassParseError::ParseError(parser::ParseError::Eof))
+        );
+    }
+
+    #[test]
+    fn test_parse_long() {
+        let input = [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0];
+        let (rest, constant) = parse_long(&input).unwrap();
+        assert_eq!(rest, &[]);
+        assert_eq!(
+            constant,
+            Constant::Long {
+                value: 0x123456789abcdef0
+            }
+        );
+
+        let input = [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde];
+        let result = parse_long(&input);
+        assert_eq!(
+            result,
+            Err(ClassParseError::ParseError(parser::ParseError::Eof))
+        );
+    }
+
+    #[test]
+    fn test_parse_double() {
+        let input = [0x3f, 0xf3, 0xc0, 0xc9, 0x53, 0x9b, 0x88, 0x87];
+        let (rest, constant) = parse_double(&input).unwrap();
+        assert_eq!(rest, &[]);
+        assert_eq!(constant, Constant::Double { value: 1.234_567 });
+
+        let input = [0x3f, 0xf3, 0xc0, 0xc9, 0x53, 0x9b, 0x88];
+        let result = parse_double(&input);
         assert_eq!(
             result,
             Err(ClassParseError::ParseError(parser::ParseError::Eof))
