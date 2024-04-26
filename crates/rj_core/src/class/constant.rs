@@ -98,6 +98,11 @@ pub fn parse_class(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
     Ok((input, Constant::Class { name_index }))
 }
 
+pub fn parse_string(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+    let (input, string_index) = parser::be_u16(input)?;
+    Ok((input, Constant::String { string_index }))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -205,5 +210,18 @@ mod tests {
         let (rest, constant) = parse_class(&input).unwrap();
         assert_eq!(rest, &[]);
         assert_eq!(constant, Constant::Class { name_index: 0x1234 });
+    }
+
+    #[test]
+    fn test_parse_string() {
+        let input = [0x12, 0x34];
+        let (rest, constant) = parse_string(&input).unwrap();
+        assert_eq!(rest, &[]);
+        assert_eq!(
+            constant,
+            Constant::String {
+                string_index: 0x1234
+            }
+        );
     }
 }
