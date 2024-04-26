@@ -163,6 +163,11 @@ pub fn parse_method_handle(input: &[u8]) -> Result<(&[u8], Constant), ClassParse
     ))
 }
 
+pub fn parse_method_type(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+    let (input, descriptor_index) = parser::be_u16(input)?;
+    Ok((input, Constant::MethodType { descriptor_index }))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -351,6 +356,19 @@ mod tests {
             Constant::MethodHandle {
                 reference_kind: 0x01,
                 reference_index: 0x2345
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_method_type() {
+        let input = [0x12, 0x34];
+        let (rest, constant) = parse_method_type(&input).unwrap();
+        assert_eq!(rest, &[]);
+        assert_eq!(
+            constant,
+            Constant::MethodType {
+                descriptor_index: 0x1234
             }
         );
     }
