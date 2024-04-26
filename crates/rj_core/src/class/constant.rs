@@ -168,6 +168,30 @@ pub fn parse_method_type(input: &[u8]) -> Result<(&[u8], Constant), ClassParseEr
     Ok((input, Constant::MethodType { descriptor_index }))
 }
 
+pub fn parse_dynamic(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+    let (input, bootstrap_method_attr_index) = parser::be_u16(input)?;
+    let (input, name_and_type_index) = parser::be_u16(input)?;
+    Ok((
+        input,
+        Constant::Dynamic {
+            bootstrap_method_attr_index,
+            name_and_type_index,
+        },
+    ))
+}
+
+pub fn parse_invoke_dynamic(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+    let (input, bootstrap_method_attr_index) = parser::be_u16(input)?;
+    let (input, name_and_type_index) = parser::be_u16(input)?;
+    Ok((
+        input,
+        Constant::InvokeDynamic {
+            bootstrap_method_attr_index,
+            name_and_type_index,
+        },
+    ))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -369,6 +393,34 @@ mod tests {
             constant,
             Constant::MethodType {
                 descriptor_index: 0x1234
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_dynamic() {
+        let input = [0x12, 0x34, 0x56, 0x78];
+        let (rest, constant) = parse_dynamic(&input).unwrap();
+        assert_eq!(rest, &[]);
+        assert_eq!(
+            constant,
+            Constant::Dynamic {
+                bootstrap_method_attr_index: 0x1234,
+                name_and_type_index: 0x5678
+            }
+        );
+    }
+
+    #[test]
+    fn test_parse_invoke_dynamic() {
+        let input = [0x12, 0x34, 0x56, 0x78];
+        let (rest, constant) = parse_invoke_dynamic(&input).unwrap();
+        assert_eq!(rest, &[]);
+        assert_eq!(
+            constant,
+            Constant::InvokeDynamic {
+                bootstrap_method_attr_index: 0x1234,
+                name_and_type_index: 0x5678
             }
         );
     }
