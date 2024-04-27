@@ -5,6 +5,9 @@
 		"ghcr.io/devcontainers/features/rust:1": {
 			"version": "1.77.2",
 			"profile": "minimal"
+		},
+		"ghcr.io/devcontainers/features/java:1": {
+			"version": "21"
 		}
 	},
 	"customizations": {
