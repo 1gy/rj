@@ -114,6 +114,21 @@ impl ClassAccessFlags {
     pub const MODULE: Self = Self::from_bits(0x8000);
 }
 
+define_flags!(FieldAccessFlags);
+
+impl FieldAccessFlags {
+    pub const EMPTY: Self = Self::from_bits(0);
+    pub const PUBLIC: Self = Self::from_bits(0x0001);
+    pub const PRIVATE: Self = Self::from_bits(0x0002);
+    pub const PROTECTED: Self = Self::from_bits(0x0004);
+    pub const STATIC: Self = Self::from_bits(0x0008);
+    pub const FINAL: Self = Self::from_bits(0x0010);
+    pub const VOLATILE: Self = Self::from_bits(0x0040);
+    pub const TRANSIENT: Self = Self::from_bits(0x0080);
+    pub const SYNTHETIC: Self = Self::from_bits(0x1000);
+    pub const ENUM: Self = Self::from_bits(0x4000);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
