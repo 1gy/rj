@@ -6,6 +6,7 @@ use crate::parser;
 pub enum ClassParseError {
     ParseError(parser::ParseError),
     Utf8Error(FromUtf8Error),
+    InvalidConstantTag(u8),
 }
 
 impl From<parser::ParseError> for ClassParseError {

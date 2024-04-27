@@ -4,6 +4,53 @@
 use super::error::ClassParseError;
 use crate::parser;
 
+pub enum ConstantTag {
+    Utf8 = 1,
+    Integer = 3,
+    Float = 4,
+    Long = 5,
+    Double = 6,
+    Class = 7,
+    String = 8,
+    Fieldref = 9,
+    Methodref = 10,
+    InterfaceMethodref = 11,
+    NameAndType = 12,
+    MethodHandle = 15,
+    MethodType = 16,
+    Dynamic = 17,
+    InvokeDynamic = 18,
+    Module = 19,
+    Package = 20,
+}
+
+impl TryFrom<u8> for ConstantTag {
+    type Error = ClassParseError;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            1 => Ok(ConstantTag::Utf8),
+            3 => Ok(ConstantTag::Integer),
+            4 => Ok(ConstantTag::Float),
+            5 => Ok(ConstantTag::Long),
+            6 => Ok(ConstantTag::Double),
+            7 => Ok(ConstantTag::Class),
+            8 => Ok(ConstantTag::String),
+            9 => Ok(ConstantTag::Fieldref),
+            10 => Ok(ConstantTag::Methodref),
+            11 => Ok(ConstantTag::InterfaceMethodref),
+            12 => Ok(ConstantTag::NameAndType),
+            15 => Ok(ConstantTag::MethodHandle),
+            16 => Ok(ConstantTag::MethodType),
+            17 => Ok(ConstantTag::Dynamic),
+            18 => Ok(ConstantTag::InvokeDynamic),
+            19 => Ok(ConstantTag::Module),
+            20 => Ok(ConstantTag::Package),
+            _ => Err(ClassParseError::InvalidConstantTag(value)),
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum Constant {
     Utf8 {
@@ -66,44 +113,44 @@ pub enum Constant {
     },
 }
 
-pub fn parse_utf8(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+fn parse_utf8(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
     let (input, length) = parser::be_u16(input)?;
     let (input, value) = parser::bytes(input, length as usize)?;
     let value = String::from_utf8(value.to_vec())?;
     Ok((input, Constant::Utf8 { value }))
 }
 
-pub fn parse_integer(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+fn parse_integer(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
     let (input, value) = parser::be_i32(input)?;
     Ok((input, Constant::Integer { value }))
 }
 
-pub fn parse_float(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+fn parse_float(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
     let (input, value) = parser::be_f32(input)?;
     Ok((input, Constant::Float { value }))
 }
 
-pub fn parse_long(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+fn parse_long(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
     let (input, value) = parser::be_i64(input)?;
     Ok((input, Constant::Long { value }))
 }
 
-pub fn parse_double(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+fn parse_double(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
     let (input, value) = parser::be_f64(input)?;
     Ok((input, Constant::Double { value }))
 }
 
-pub fn parse_class(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+fn parse_class(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
     let (input, name_index) = parser::be_u16(input)?;
     Ok((input, Constant::Class { name_index }))
 }
 
-pub fn parse_string(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+fn parse_string(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
     let (input, string_index) = parser::be_u16(input)?;
     Ok((input, Constant::String { string_index }))
 }
 
-pub fn parse_fieldref(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+fn parse_fieldref(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
     let (input, class_index) = parser::be_u16(input)?;
     let (input, name_and_type_index) = parser::be_u16(input)?;
     Ok((
@@ -115,7 +162,7 @@ pub fn parse_fieldref(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError
     ))
 }
 
-pub fn parse_methodref(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+fn parse_methodref(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
     let (input, class_index) = parser::be_u16(input)?;
     let (input, name_and_type_index) = parser::be_u16(input)?;
     Ok((
@@ -127,7 +174,7 @@ pub fn parse_methodref(input: &[u8]) -> Result<(&[u8], Constant), ClassParseErro
     ))
 }
 
-pub fn parse_interface_methodref(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+fn parse_interface_methodref(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
     let (input, class_index) = parser::be_u16(input)?;
     let (input, name_and_type_index) = parser::be_u16(input)?;
     Ok((
@@ -139,7 +186,7 @@ pub fn parse_interface_methodref(input: &[u8]) -> Result<(&[u8], Constant), Clas
     ))
 }
 
-pub fn parse_name_and_type(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+fn parse_name_and_type(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
     let (input, name_index) = parser::be_u16(input)?;
     let (input, descriptor_index) = parser::be_u16(input)?;
     Ok((
@@ -151,7 +198,7 @@ pub fn parse_name_and_type(input: &[u8]) -> Result<(&[u8], Constant), ClassParse
     ))
 }
 
-pub fn parse_method_handle(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+fn parse_method_handle(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
     let (input, reference_kind) = parser::be_u8(input)?;
     let (input, reference_index) = parser::be_u16(input)?;
     Ok((
@@ -163,12 +210,12 @@ pub fn parse_method_handle(input: &[u8]) -> Result<(&[u8], Constant), ClassParse
     ))
 }
 
-pub fn parse_method_type(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+fn parse_method_type(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
     let (input, descriptor_index) = parser::be_u16(input)?;
     Ok((input, Constant::MethodType { descriptor_index }))
 }
 
-pub fn parse_dynamic(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+fn parse_dynamic(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
     let (input, bootstrap_method_attr_index) = parser::be_u16(input)?;
     let (input, name_and_type_index) = parser::be_u16(input)?;
     Ok((
@@ -180,7 +227,7 @@ pub fn parse_dynamic(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError>
     ))
 }
 
-pub fn parse_invoke_dynamic(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+fn parse_invoke_dynamic(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
     let (input, bootstrap_method_attr_index) = parser::be_u16(input)?;
     let (input, name_and_type_index) = parser::be_u16(input)?;
     Ok((
@@ -192,14 +239,37 @@ pub fn parse_invoke_dynamic(input: &[u8]) -> Result<(&[u8], Constant), ClassPars
     ))
 }
 
-pub fn parse_module(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+fn parse_module(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
     let (input, name_index) = parser::be_u16(input)?;
     Ok((input, Constant::Module { name_index }))
 }
 
-pub fn parse_package(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+fn parse_package(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
     let (input, name_index) = parser::be_u16(input)?;
     Ok((input, Constant::Package { name_index }))
+}
+
+pub fn parse_constant(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
+    let (input, tag) = parser::be_u8(input)?;
+    match ConstantTag::try_from(tag)? {
+        ConstantTag::Utf8 => parse_utf8(input),
+        ConstantTag::Integer => parse_integer(input),
+        ConstantTag::Float => parse_float(input),
+        ConstantTag::Long => parse_long(input),
+        ConstantTag::Double => parse_double(input),
+        ConstantTag::Class => parse_class(input),
+        ConstantTag::String => parse_string(input),
+        ConstantTag::Fieldref => parse_fieldref(input),
+        ConstantTag::Methodref => parse_methodref(input),
+        ConstantTag::InterfaceMethodref => parse_interface_methodref(input),
+        ConstantTag::NameAndType => parse_name_and_type(input),
+        ConstantTag::MethodHandle => parse_method_handle(input),
+        ConstantTag::MethodType => parse_method_type(input),
+        ConstantTag::Dynamic => parse_dynamic(input),
+        ConstantTag::InvokeDynamic => parse_invoke_dynamic(input),
+        ConstantTag::Module => parse_module(input),
+        ConstantTag::Package => parse_package(input),
+    }
 }
 
 #[cfg(test)]
@@ -449,5 +519,80 @@ mod tests {
         let (rest, constant) = parse_package(&input).unwrap();
         assert_eq!(rest, &[]);
         assert_eq!(constant, Constant::Package { name_index: 0x1234 });
+    }
+
+    #[test]
+    fn test_parse_constant() {
+        let input = [0x01, 0x00, 0x03, 0x41, 0x42, 0x43];
+        let (_, constant) = parse_constant(&input).unwrap();
+        assert!(matches!(constant, Constant::Utf8 { .. }));
+
+        let input = [0x03, 0x12, 0x34, 0x56, 0x78];
+        let (_, constant) = parse_constant(&input).unwrap();
+        assert!(matches!(constant, Constant::Integer { .. }));
+
+        let input = [0x04, 0x3f, 0x9d, 0xf3, 0xb6];
+        let (_, constant) = parse_constant(&input).unwrap();
+        assert!(matches!(constant, Constant::Float { .. }));
+
+        let input = [0x05, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0];
+        let (_, constant) = parse_constant(&input).unwrap();
+        assert!(matches!(constant, Constant::Long { .. }));
+
+        let input = [0x06, 0x3f, 0xf3, 0xc0, 0xc9, 0x53, 0x9b, 0x88, 0x87];
+        let (_, constant) = parse_constant(&input).unwrap();
+        assert!(matches!(constant, Constant::Double { .. }));
+
+        let input = [0x07, 0x12, 0x34];
+        let (_, constant) = parse_constant(&input).unwrap();
+        assert!(matches!(constant, Constant::Class { .. }));
+
+        let input = [0x08, 0x12, 0x34];
+        let (_, constant) = parse_constant(&input).unwrap();
+        assert!(matches!(constant, Constant::String { .. }));
+
+        let input = [0x09, 0x12, 0x34, 0x56, 0x78];
+        let (_, constant) = parse_constant(&input).unwrap();
+        assert!(matches!(constant, Constant::Fieldref { .. }));
+
+        let input = [0x0a, 0x12, 0x34, 0x56, 0x78];
+        let (_, constant) = parse_constant(&input).unwrap();
+        assert!(matches!(constant, Constant::Methodref { .. }));
+
+        let input = [0x0b, 0x12, 0x34, 0x56, 0x78];
+        let (_, constant) = parse_constant(&input).unwrap();
+        assert!(matches!(constant, Constant::InterfaceMethodref { .. }));
+
+        let input = [0x0c, 0x12, 0x34, 0x56, 0x78];
+        let (_, constant) = parse_constant(&input).unwrap();
+        assert!(matches!(constant, Constant::NameAndType { .. }));
+
+        let input = [0x0f, 0x01, 0x23, 0x45];
+        let (_, constant) = parse_constant(&input).unwrap();
+        assert!(matches!(constant, Constant::MethodHandle { .. }));
+
+        let input = [0x10, 0x12, 0x34];
+        let (_, constant) = parse_constant(&input).unwrap();
+        assert!(matches!(constant, Constant::MethodType { .. }));
+
+        let input = [0x11, 0x12, 0x34, 0x56, 0x78];
+        let (_, constant) = parse_constant(&input).unwrap();
+        assert!(matches!(constant, Constant::Dynamic { .. }));
+
+        let input = [0x12, 0x12, 0x34, 0x56, 0x78];
+        let (_, constant) = parse_constant(&input).unwrap();
+        assert!(matches!(constant, Constant::InvokeDynamic { .. }));
+
+        let input = [0x13, 0x12, 0x34];
+        let (_, constant) = parse_constant(&input).unwrap();
+        assert!(matches!(constant, Constant::Module { .. }));
+
+        let input = [0x14, 0x12, 0x34];
+        let (_, constant) = parse_constant(&input).unwrap();
+        assert!(matches!(constant, Constant::Package { .. }));
+
+        let input = [99];
+        let result = parse_constant(&input);
+        assert_eq!(result, Err(ClassParseError::InvalidConstantTag(99)));
     }
 }
