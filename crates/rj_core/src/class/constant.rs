@@ -52,9 +52,9 @@ impl TryFrom<u8> for ConstantTag {
 }
 
 #[derive(Debug, PartialEq)]
-pub enum Constant {
+pub enum Constant<'a> {
     Utf8 {
-        value: String,
+        value: &'a [u8],
     },
     Integer {
         value: i32,
@@ -116,7 +116,6 @@ pub enum Constant {
 fn parse_utf8(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
     let (input, length) = parser::be_u16(input)?;
     let (input, value) = parser::bytes(input, length as usize)?;
-    let value = String::from_utf8(value.to_vec())?;
     Ok((input, Constant::Utf8 { value }))
 }
 
@@ -281,12 +280,7 @@ mod tests {
         let input = [0x00, 0x03, 0x41, 0x42, 0x43, 0x44];
         let (rest, constant) = parse_utf8(&input).unwrap();
         assert_eq!(rest, &[0x44]);
-        assert_eq!(
-            constant,
-            Constant::Utf8 {
-                value: "ABC".to_string()
-            }
-        );
+        assert_eq!(constant, Constant::Utf8 { value: b"ABC" });
 
         let input = [0x00];
         let result = parse_utf8(&input);
@@ -301,11 +295,6 @@ mod tests {
             result,
             Err(ClassParseError::ParseError(parser::ParseError::Eof))
         );
-
-        // invalid utf8
-        let input = [0x00, 0x03, 0x41, 0x42, 0x80];
-        let result = parse_utf8(&input);
-        assert!(matches!(result, Err(ClassParseError::Utf8Error(_))));
     }
 
     #[test]
