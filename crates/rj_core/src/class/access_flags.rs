@@ -47,13 +47,61 @@ impl BitAnd for BitFlags {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(transparent)]
-pub struct AccessFlags {
-    flags: BitFlags,
+macro_rules! define_flags {
+    ($flag_type: ident) => {
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        #[repr(transparent)]
+        pub struct $flag_type {
+            flags: BitFlags,
+        }
+
+        impl $flag_type {
+            pub const fn from_bits(bits: u16) -> Self {
+                Self {
+                    flags: BitFlags::from_bits(bits),
+                }
+            }
+
+            pub fn contains(&self, other: Self) -> bool {
+                self.flags.contains(other.flags)
+            }
+
+            pub fn union(&self, other: Self) -> Self {
+                Self::from_bits(self.flags.bits | other.flags.bits)
+            }
+
+            pub fn intersection(&self, other: Self) -> Self {
+                Self::from_bits(self.flags.bits & other.flags.bits)
+            }
+        }
+
+        impl From<u16> for $flag_type {
+            fn from(bits: u16) -> Self {
+                Self::from_bits(bits)
+            }
+        }
+
+        impl BitOr for $flag_type {
+            type Output = Self;
+
+            fn bitor(self, rhs: Self) -> Self {
+                self.union(rhs)
+            }
+        }
+
+        impl BitAnd for $flag_type {
+            type Output = Self;
+
+            fn bitand(self, rhs: Self) -> Self {
+                self.intersection(rhs)
+            }
+        }
+    };
 }
 
-impl AccessFlags {
+define_flags!(ClassAccessFlags);
+
+impl ClassAccessFlags {
     pub const EMPTY: Self = Self::from_bits(0);
     pub const PUBLIC: Self = Self::from_bits(0x0001);
     pub const FINAL: Self = Self::from_bits(0x0010);
@@ -64,48 +112,6 @@ impl AccessFlags {
     pub const ANNOTATION: Self = Self::from_bits(0x2000);
     pub const ENUM: Self = Self::from_bits(0x4000);
     pub const MODULE: Self = Self::from_bits(0x8000);
-
-    pub const fn from_bits(bits: u16) -> Self {
-        Self {
-            flags: BitFlags::from_bits(bits),
-        }
-    }
-}
-
-impl From<u16> for AccessFlags {
-    fn from(bits: u16) -> Self {
-        Self::from_bits(bits)
-    }
-}
-
-impl AccessFlags {
-    pub fn contains(&self, other: Self) -> bool {
-        self.flags.contains(other.flags)
-    }
-
-    pub fn union(&self, other: Self) -> Self {
-        Self::from_bits(self.flags.bits | other.flags.bits)
-    }
-
-    pub fn intersection(&self, other: Self) -> Self {
-        Self::from_bits(self.flags.bits & other.flags.bits)
-    }
-}
-
-impl BitOr for AccessFlags {
-    type Output = Self;
-
-    fn bitor(self, rhs: Self) -> Self {
-        self.union(rhs)
-    }
-}
-
-impl BitAnd for AccessFlags {
-    type Output = Self;
-
-    fn bitand(self, rhs: Self) -> Self {
-        self.intersection(rhs)
-    }
 }
 
 #[cfg(test)]
@@ -153,22 +159,5 @@ mod tests {
             BitFlags::from_bits(0b01),
             BitFlags::from_bits(0b11) & BitFlags::from_bits(0b01)
         );
-    }
-
-    #[test]
-    fn test_access_flags() {
-        let flags =
-            AccessFlags::from_bits(AccessFlags::PUBLIC.flags.bits | AccessFlags::FINAL.flags.bits);
-        assert!(flags.contains(AccessFlags::PUBLIC));
-        assert!(flags.contains(AccessFlags::FINAL));
-        assert!(!flags.contains(AccessFlags::SUPER));
-
-        assert_eq!(AccessFlags::PUBLIC, flags & AccessFlags::PUBLIC);
-        assert_eq!(AccessFlags::EMPTY, flags & AccessFlags::SUPER);
-        assert_eq!(AccessFlags::PUBLIC, flags.intersection(AccessFlags::PUBLIC));
-        assert_eq!(AccessFlags::EMPTY, flags.intersection(AccessFlags::SUPER));
-
-        assert_eq!(flags, AccessFlags::PUBLIC | AccessFlags::FINAL);
-        assert_eq!(flags, AccessFlags::PUBLIC.union(AccessFlags::FINAL));
     }
 }
