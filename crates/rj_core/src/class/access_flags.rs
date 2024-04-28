@@ -129,6 +129,24 @@ impl FieldAccessFlags {
     pub const ENUM: Self = Self::from_bits(0x4000);
 }
 
+define_flags!(MethodAccessFlags);
+
+impl MethodAccessFlags {
+    pub const EMPTY: Self = Self::from_bits(0);
+    pub const PUBLIC: Self = Self::from_bits(0x0001);
+    pub const PRIVATE: Self = Self::from_bits(0x0002);
+    pub const PROTECTED: Self = Self::from_bits(0x0004);
+    pub const STATIC: Self = Self::from_bits(0x0008);
+    pub const FINAL: Self = Self::from_bits(0x0010);
+    pub const SYNCHRONIZED: Self = Self::from_bits(0x0020);
+    pub const BRIDGE: Self = Self::from_bits(0x0040);
+    pub const VARARGS: Self = Self::from_bits(0x0080);
+    pub const NATIVE: Self = Self::from_bits(0x0100);
+    pub const ABSTRACT: Self = Self::from_bits(0x0400);
+    pub const STRICT: Self = Self::from_bits(0x0800);
+    pub const SYNTHETIC: Self = Self::from_bits(0x1000);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
