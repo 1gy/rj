@@ -24,29 +24,27 @@ pub enum ConstantTag {
     Package = 20,
 }
 
-impl TryFrom<u8> for ConstantTag {
-    type Error = ClassParseError;
-
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
+impl ConstantTag {
+    pub fn from_u8(value: u8) -> Option<Self> {
         match value {
-            1 => Ok(ConstantTag::Utf8),
-            3 => Ok(ConstantTag::Integer),
-            4 => Ok(ConstantTag::Float),
-            5 => Ok(ConstantTag::Long),
-            6 => Ok(ConstantTag::Double),
-            7 => Ok(ConstantTag::Class),
-            8 => Ok(ConstantTag::String),
-            9 => Ok(ConstantTag::Fieldref),
-            10 => Ok(ConstantTag::Methodref),
-            11 => Ok(ConstantTag::InterfaceMethodref),
-            12 => Ok(ConstantTag::NameAndType),
-            15 => Ok(ConstantTag::MethodHandle),
-            16 => Ok(ConstantTag::MethodType),
-            17 => Ok(ConstantTag::Dynamic),
-            18 => Ok(ConstantTag::InvokeDynamic),
-            19 => Ok(ConstantTag::Module),
-            20 => Ok(ConstantTag::Package),
-            _ => Err(ClassParseError::InvalidConstantTag(value)),
+            1 => Some(Self::Utf8),
+            3 => Some(Self::Integer),
+            4 => Some(Self::Float),
+            5 => Some(Self::Long),
+            6 => Some(Self::Double),
+            7 => Some(Self::Class),
+            8 => Some(Self::String),
+            9 => Some(Self::Fieldref),
+            10 => Some(Self::Methodref),
+            11 => Some(Self::InterfaceMethodref),
+            12 => Some(Self::NameAndType),
+            15 => Some(Self::MethodHandle),
+            16 => Some(Self::MethodType),
+            17 => Some(Self::Dynamic),
+            18 => Some(Self::InvokeDynamic),
+            19 => Some(Self::Module),
+            20 => Some(Self::Package),
+            _ => None,
         }
     }
 }
@@ -250,7 +248,8 @@ fn parse_package(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
 
 pub fn parse_constant(input: &[u8]) -> Result<(&[u8], Constant), ClassParseError> {
     let (input, tag) = parser::be_u8(input)?;
-    match ConstantTag::try_from(tag)? {
+
+    match ConstantTag::from_u8(tag).ok_or(ClassParseError::InvalidConstantTag(tag))? {
         ConstantTag::Utf8 => parse_utf8(input),
         ConstantTag::Integer => parse_integer(input),
         ConstantTag::Float => parse_float(input),
