@@ -1,6 +1,8 @@
 mod code;
+mod line_number_table;
 
 pub use self::code::{parse_code, Code};
+pub use self::line_number_table::{parse_line_number_table, LineNumberTable};
 
 use super::constant::Constant;
 use super::error::ClassParseError;
@@ -9,6 +11,7 @@ use crate::parser::{be_u16, be_u32, bytes};
 #[derive(Debug)]
 pub enum AttributeName {
     Code,
+    LineNumberTable,
     // WIP
 }
 
@@ -16,6 +19,7 @@ impl AttributeName {
     pub fn from_name(name: &[u8]) -> Option<Self> {
         match name {
             b"Code" => Some(Self::Code),
+            b"LineNumberTable" => Some(Self::LineNumberTable),
             // WIP
             _ => None,
         }
@@ -29,11 +33,18 @@ pub enum Attribute<'a> {
         data: &'a [u8],
     },
     Code(Code<'a, Attribute<'a>>),
+    LineNumberTable(LineNumberTable),
 }
 
 impl<'a> From<Code<'a, Attribute<'a>>> for Attribute<'a> {
     fn from(code: Code<'a, Attribute<'a>>) -> Self {
         Attribute::Code(code)
+    }
+}
+
+impl<'a> From<LineNumberTable> for Attribute<'a> {
+    fn from(line_number_table: LineNumberTable) -> Self {
+        Attribute::LineNumberTable(line_number_table)
     }
 }
 
@@ -53,6 +64,7 @@ pub fn parse_attribute<'a>(
     let (input, attribute_length) = be_u32(input)?;
     let (input, attribute) = match AttributeName::from_name(name) {
         Some(AttributeName::Code) => parse_code(input, constant_pool, parse_attribute)?,
+        Some(AttributeName::LineNumberTable) => parse_line_number_table(input)?,
         _ => {
             let (input, data) = bytes(input, attribute_length as usize)?;
             (
