@@ -24,7 +24,10 @@ impl AttributeName {
 
 #[derive(Debug, PartialEq)]
 pub enum Attribute<'a> {
-    Unknown { data: &'a [u8] },
+    Unknown {
+        attribute_name_index: u16,
+        data: &'a [u8],
+    },
     Code(Code<'a, Attribute<'a>>),
 }
 
@@ -52,7 +55,13 @@ pub fn parse_attribute<'a>(
         Some(AttributeName::Code) => parse_code(input, constant_pool, parse_attribute)?,
         _ => {
             let (input, data) = bytes(input, attribute_length as usize)?;
-            (input, Attribute::Unknown { data })
+            (
+                input,
+                Attribute::Unknown {
+                    attribute_name_index,
+                    data,
+                },
+            )
         }
     };
     Ok((input, attribute))
@@ -78,6 +87,7 @@ mod tests {
         assert_eq!(
             attribute,
             Attribute::Unknown {
+                attribute_name_index: 0x0001,
                 data: &[0x00, 0x01, 0x02, 0x03]
             }
         );

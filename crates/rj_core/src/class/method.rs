@@ -77,6 +77,7 @@ mod tests {
                 name_index: 1,
                 descriptor_index: 2,
                 attributes: vec![Attribute::Unknown {
+                    attribute_name_index: 0x0003,
                     data: &[0x00, 0x01, 0x02, 0x03]
                 }]
             }
