@@ -1,8 +1,10 @@
 mod code;
 mod line_number_table;
+mod source_file;
 
 pub use self::code::{parse_code, Code};
 pub use self::line_number_table::{parse_line_number_table, LineNumberTable};
+pub use self::source_file::{parse_source_file, SourceFile};
 
 use super::constant::Constant;
 use super::error::ClassParseError;
@@ -12,6 +14,7 @@ use crate::parser::{be_u16, be_u32, bytes};
 pub enum AttributeName {
     Code,
     LineNumberTable,
+    SourceFile,
     // WIP
 }
 
@@ -20,6 +23,7 @@ impl AttributeName {
         match name {
             b"Code" => Some(Self::Code),
             b"LineNumberTable" => Some(Self::LineNumberTable),
+            b"SourceFile" => Some(Self::SourceFile),
             // WIP
             _ => None,
         }
@@ -34,6 +38,7 @@ pub enum Attribute<'a> {
     },
     Code(Code<'a, Attribute<'a>>),
     LineNumberTable(LineNumberTable),
+    SourceFile(SourceFile),
 }
 
 impl<'a> From<Code<'a, Attribute<'a>>> for Attribute<'a> {
@@ -45,6 +50,12 @@ impl<'a> From<Code<'a, Attribute<'a>>> for Attribute<'a> {
 impl<'a> From<LineNumberTable> for Attribute<'a> {
     fn from(line_number_table: LineNumberTable) -> Self {
         Attribute::LineNumberTable(line_number_table)
+    }
+}
+
+impl<'a> From<SourceFile> for Attribute<'a> {
+    fn from(source_file: SourceFile) -> Self {
+        Attribute::SourceFile(source_file)
     }
 }
 
@@ -65,6 +76,7 @@ pub fn parse_attribute<'a>(
     let (input, attribute) = match AttributeName::from_name(name) {
         Some(AttributeName::Code) => parse_code(input, constant_pool, parse_attribute)?,
         Some(AttributeName::LineNumberTable) => parse_line_number_table(input)?,
+        Some(AttributeName::SourceFile) => parse_source_file(input)?,
         _ => {
             let (input, data) = bytes(input, attribute_length as usize)?;
             (
