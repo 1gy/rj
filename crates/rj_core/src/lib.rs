@@ -1,5 +1,6 @@
 pub mod class;
 pub mod parser;
+pub mod print;
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right
