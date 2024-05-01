@@ -1,3 +1,4 @@
+pub mod asm;
 pub mod class;
 pub mod parser;
 pub mod print;
