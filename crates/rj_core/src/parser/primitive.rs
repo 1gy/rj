@@ -46,6 +46,15 @@ pub fn be_u64(input: &[u8]) -> Result<(&[u8], u64), ParseError> {
     Ok((rest, value))
 }
 
+pub fn be_i8(input: &[u8]) -> Result<(&[u8], i8), ParseError> {
+    if input.is_empty() {
+        return Err(ParseError::Eof);
+    }
+    let value = input[0] as i8;
+    let rest = &input[1..];
+    Ok((rest, value))
+}
+
 pub fn be_i16(input: &[u8]) -> Result<(&[u8], i16), ParseError> {
     if input.len() < 2 {
         return Err(ParseError::Eof);
@@ -155,6 +164,24 @@ mod tests {
         assert_eq!(value, 0x123456789abcdef0);
 
         let result = be_u64(&[0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde]);
+        assert_eq!(result, Err(ParseError::Eof));
+    }
+
+    #[test]
+    fn test_be_i8() {
+        // positive
+        let input = [0x12, 0x34];
+        let (rest, value) = be_i8(&input).unwrap();
+        assert_eq!(rest, [0x34]);
+        assert_eq!(value, 0x12);
+
+        // negative
+        let input = [0xff, 0x12];
+        let (rest, value) = be_i8(&input).unwrap();
+        assert_eq!(rest, [0x12]);
+        assert_eq!(value, -1);
+
+        let result = be_i8(&[]);
         assert_eq!(result, Err(ParseError::Eof));
     }
 
