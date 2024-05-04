@@ -597,50 +597,62 @@ pub fn parse_instruction(input: &[u8]) -> Result<(&[u8], Instruction), Instructi
         }
         0xc4 => match parse_instruction(input) {
             Ok((_, Instruction::Iload(_))) => {
+                let (input, _) = be_u8(input)?;
                 let (input, index) = be_u16(input)?;
                 Ok((input, Instruction::WideIload(index)))
             }
             Ok((_, Instruction::Fload(_))) => {
+                let (input, _) = be_u8(input)?;
                 let (input, index) = be_u16(input)?;
                 Ok((input, Instruction::WideFload(index)))
             }
             Ok((_, Instruction::Aload(_))) => {
+                let (input, _) = be_u8(input)?;
                 let (input, index) = be_u16(input)?;
                 Ok((input, Instruction::WideAload(index)))
             }
             Ok((_, Instruction::Lload(_))) => {
+                let (input, _) = be_u8(input)?;
                 let (input, index) = be_u16(input)?;
                 Ok((input, Instruction::WideLload(index)))
             }
             Ok((_, Instruction::Dload(_))) => {
+                let (input, _) = be_u8(input)?;
                 let (input, index) = be_u16(input)?;
                 Ok((input, Instruction::WideDload(index)))
             }
             Ok((_, Instruction::Istore(_))) => {
+                let (input, _) = be_u8(input)?;
                 let (input, index) = be_u16(input)?;
                 Ok((input, Instruction::WideIstore(index)))
             }
             Ok((_, Instruction::Fstore(_))) => {
+                let (input, _) = be_u8(input)?;
                 let (input, index) = be_u16(input)?;
                 Ok((input, Instruction::WideFstore(index)))
             }
             Ok((_, Instruction::Astore(_))) => {
+                let (input, _) = be_u8(input)?;
                 let (input, index) = be_u16(input)?;
                 Ok((input, Instruction::WideAstore(index)))
             }
             Ok((_, Instruction::Lstore(_))) => {
+                let (input, _) = be_u8(input)?;
                 let (input, index) = be_u16(input)?;
                 Ok((input, Instruction::WideLstore(index)))
             }
             Ok((_, Instruction::Dstore(_))) => {
+                let (input, _) = be_u8(input)?;
                 let (input, index) = be_u16(input)?;
                 Ok((input, Instruction::WideDstore(index)))
             }
             Ok((_, Instruction::Ret(_))) => {
+                let (input, _) = be_u8(input)?;
                 let (input, index) = be_u16(input)?;
                 Ok((input, Instruction::WideRet(index)))
             }
             Ok((_, Instruction::Iinc(_, _))) => {
+                let (input, _) = be_u8(input)?;
                 let (input, index) = be_u16(input)?;
                 let (input, byte) = be_i16(input)?;
                 Ok((input, Instruction::WideIinc(index, byte)))
@@ -651,5 +663,654 @@ pub fn parse_instruction(input: &[u8]) -> Result<(&[u8], Instruction), Instructi
             }
         },
         _ => Err(InstructionParseError::UnknownInstruction(opcode)),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_instruction() {
+        let input = &[
+            0x32, // aaload
+            0x53, // aastore
+            0x01, // aconst_null
+            0x19, 0x01, // aload 1
+            0x2a, // Aload0
+            0x2b, // Aload1
+            0x2c, // Aload2
+            0x2d, // Aload3
+            0xbd, 0x01, 0x02, // anewarray 258
+            0xb0, // areturn
+            0xbe, // arraylength
+            0x3a, 0x01, // astore 1
+            0x4b, // astore_0
+            0x4c, // astore_1
+            0x4d, // astore_2
+            0x4e, // astore_3
+            0xbf, // athrow
+            0x33, // baload
+            0x54, // bastore
+            0x10, 0x01, // bipush 1
+            0x34, // caload
+            0x55, // castore
+            0xc0, 0x01, 0x02, // checkcast 258
+            0x90, // d2f
+            0x8e, // d2i
+            0x8f, // d2l
+            0x63, // dadd
+            0x31, // daload
+            0x52, // dastore
+            0x98, // dcmpg
+            0x97, // dcmpl
+            0x0e, // dconst_0
+            0x0f, // dconst_1
+            0x6f, // ddiv
+            0x18, 0x01, // dload 1
+            0x26, // dload_0
+            0x27, // dload_1
+            0x28, // dload_2
+            0x29, // dload_3
+            0x6b, // dmul
+            0x77, // dneg
+            0x73, // drem
+            0xaf, // dreturn
+            0x39, 0x01, // dstore 1
+            0x47, // dstore_0
+            0x48, // dstore_1
+            0x49, // dstore_2
+            0x4a, // dstore_3
+            0x67, // dsub
+            0x59, // dup
+            0x5a, // dup_x1
+            0x5b, // dup_x2
+            0x5c, // dup2
+            0x5d, // dup2_x1
+            0x5e, // dup2_x2
+            0x8d, // f2d
+            0x8b, // f2i
+            0x8c, // f2l
+            0x62, // fadd
+            0x30, // faload
+            0x51, // fastore
+            0x96, // fcmpg
+            0x95, // fcmpl
+            0x0b, // fconst_0
+            0x0c, // fconst_1
+            0x0d, // fconst_2
+            0x6e, // fdiv
+            0x17, 0x01, // fload 1
+            0x22, // fload_0
+            0x23, // fload_1
+            0x24, // fload_2
+            0x25, // fload_3
+            0x6a, // fmul
+            0x76, // fneg
+            0x72, // frem
+            0xae, // freturn
+            0x38, 0x01, // fstore 1
+            0x43, // fstore_0
+            0x44, // fstore_1
+            0x45, // fstore_2
+            0x46, // fstore_3
+            0x66, // fsub
+            0xb4, 0x01, 0x02, // getfield 258
+            0xb2, 0x01, 0x02, // getstatic 258
+            0xa7, 0x01, 0x02, // goto 258
+            0xc8, 0x01, 0x02, 0x03, 0x04, // goto_w 16909060
+            0x91, // i2b
+            0x92, // i2c
+            0x87, // i2d
+            0x86, // i2f
+            0x85, // i2l
+            0x93, // i2s
+            0x60, // iadd
+            0x2e, // iaload
+            0x7e, // iand
+            0x4f, // iastore
+            0x02, // iconst_m1
+            0x03, // iconst_0
+            0x04, // iconst_1
+            0x05, // iconst_2
+            0x06, // iconst_3
+            0x07, // iconst_4
+            0x08, // iconst_5
+            0x6c, // idiv
+            0xa5, 0x01, 0x02, // if_acmpeq 258
+            0xa6, 0x01, 0x02, // if_acmpne 258
+            0x9f, 0x01, 0x02, // if_icmpeq 258
+            0xa0, 0x01, 0x02, // if_icmpne 258
+            0xa1, 0x01, 0x02, // if_icmplt 258
+            0xa2, 0x01, 0x02, // if_icmpge 258
+            0xa3, 0x01, 0x02, // if_icmpgt 258
+            0xa4, 0x01, 0x02, // if_icmple 258
+            0x99, 0x01, 0x02, // ifeq 258
+            0x9a, 0x01, 0x02, // ifne 258
+            0x9b, 0x01, 0x02, // iflt 258
+            0x9c, 0x01, 0x02, // ifge 258
+            0x9d, 0x01, 0x02, // ifgt 258
+            0x9e, 0x01, 0x02, // ifle 258
+            0xc7, 0x01, 0x02, // ifnonnull 258
+            0xc6, 0x01, 0x02, // ifnull 258
+            0x84, 0x01, 0x02, // iinc 1 2
+            0x15, 0x01, // iload 1
+            0x1a, // iload_0
+            0x1b, // iload_1
+            0x1c, // iload_2
+            0x1d, // iload_3
+            0x68, // imul
+            0x74, // ineg
+            0xc1, 0x01, 0x02, // instanceof 258
+            0xba, 0x01, 0x02, 0x00, 0x00, // invokedynamic 258 0 0
+            0xb9, 0x01, 0x02, 0x03, 0x00, // invokeinterface 258 3 0
+            0xb7, 0x01, 0x02, // invokespecial 258
+            0xb8, 0x01, 0x02, // invokestatic 258
+            0xb6, 0x01, 0x02, // invokevirtual 258
+            0x80, // ior
+            0x70, // irem
+            0xac, // ireturn
+            0x78, // ishl
+            0x7a, // ishr
+            0x36, 0x01, // istore 1
+            0x3b, // istore_0
+            0x3c, // istore_1
+            0x3d, // istore_2
+            0x3e, // istore_3
+            0x64, // isub
+            0x7c, // iushr
+            0x82, // ixor
+            0xa8, 0x01, 0x02, // jsr 258
+            0xc9, 0x01, 0x02, 0x03, 0x04, // jsr_w 16909060
+            0x8a, // l2d
+            0x89, // l2f
+            0x88, // l2i
+            0x61, // ladd
+            0x2f, // laload
+            0x7f, // land
+            0x50, // lastore
+            0x94, // lcmp
+            0x09, // lconst_0
+            0x0a, // lconst_1
+            0x12, 0x01, // ldc 1
+            0x13, 0x01, 0x02, // ldc_w 258
+            0x14, 0x01, 0x02, // ldc2_w 258
+            0x6d, // ldiv
+            0x16, 0x01, // lload 1
+            0x1e, // lload_0
+            0x1f, // lload_1
+            0x20, // lload_2
+            0x21, // lload_3
+            0x69, // lmul
+            0x75, // lneg
+            // lookupswitch
+            0x81, // lor
+            0x71, // lrem
+            0xad, // lreturn
+            0x79, // lshl
+            0x7b, // lshr
+            0x37, 0x01, // lstore 1
+            0x3f, // lstore_0
+            0x40, // lstore_1
+            0x41, // lstore_2
+            0x42, // lstore_3
+            0x65, // lsub
+            0x7d, // lushr
+            0x83, // lxor
+            0xc2, // monitorenter
+            0xc3, // monitorexit
+            0xc5, 0x01, 0x02, 0x03, // multianewarray 258 3
+            0xbb, 0x01, 0x02, // new 258
+            0xbc, 0x01, // newarray 1
+            0x00, // nop
+            0x57, // pop
+            0x58, // pop2
+            0xb5, 0x01, 0x02, // putfield 258
+            0xb3, 0x01, 0x02, // putstatic 258
+            0xa9, 0x01, // ret 1
+            0xb1, // return
+            0x35, // saload
+            0x56, // sastore
+            0x11, 0x01, 0x02, // sipush 258
+            0x5f, // swap
+            // tableswitch
+            0xc4, 0x15, 0x01, 0x02, // wide iload 258
+            0xc4, 0x17, 0x01, 0x02, // wide fload 258
+            0xc4, 0x19, 0x01, 0x02, // wide aload 258
+            0xc4, 0x16, 0x01, 0x02, // wide lload 258
+            0xc4, 0x18, 0x01, 0x02, // wide dload 258
+            0xc4, 0x36, 0x01, 0x02, // wide istore 258
+            0xc4, 0x38, 0x01, 0x02, // wide fstore 258
+            0xc4, 0x3a, 0x01, 0x02, // wide astore 258
+            0xc4, 0x37, 0x01, 0x02, // wide lstore 258
+            0xc4, 0x39, 0x01, 0x02, // wide dstore 258
+            0xc4, 0xa9, 0x01, 0x02, // wide ret 258
+            0xc4, 0x84, 0x01, 0x02, 0x03, 0x04, // wide iinc 258 772
+        ];
+
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Aaload);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Aastore);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::AconstNull);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Aload(1));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Aload0);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Aload1);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Aload2);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Aload3);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Anewarray(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Areturn);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Arraylength);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Astore(1));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Astore0);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Astore1);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Astore2);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Astore3);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Athrow);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Baload);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Bastore);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Bipush(1));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Caload);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Castore);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Checkcast(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::D2f);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::D2i);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::D2l);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Dadd);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Daload);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Dastore);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Dcmpg);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Dcmpl);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Dconst0);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Dconst1);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Ddiv);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Dload(1));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Dload0);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Dload1);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Dload2);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Dload3);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Dmul);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Dneg);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Drem);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Dreturn);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Dstore(1));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Dstore0);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Dstore1);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Dstore2);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Dstore3);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Dsub);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Dup);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::DupX1);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::DupX2);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Dup2);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Dup2X1);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Dup2X2);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::F2d);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::F2i);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::F2l);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Fadd);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Faload);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Fastore);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Fcmpg);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Fcmpl);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Fconst0);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Fconst1);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Fconst2);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Fdiv);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Fload(1));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Fload0);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Fload1);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Fload2);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Fload3);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Fmul);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Fneg);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Frem);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Freturn);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Fstore(1));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Fstore0);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Fstore1);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Fstore2);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Fstore3);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Fsub);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Getfield(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Getstatic(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Goto(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::GotoW(16909060));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::I2b);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::I2c);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::I2d);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::I2f);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::I2l);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::I2s);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Iadd);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Iaload);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Iand);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Iastore);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::IconstM1);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Iconst0);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Iconst1);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Iconst2);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Iconst3);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Iconst4);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Iconst5);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Idiv);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::IfAcmpeq(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::IfAcmpne(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::IfIcmpeq(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::IfIcmpne(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::IfIcmplt(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::IfIcmpge(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::IfIcmpgt(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::IfIcmple(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Ifeq(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Ifne(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Iflt(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Ifge(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Ifgt(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Ifle(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Ifnonnull(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Ifnull(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Iinc(1, 2));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Iload(1));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Iload0);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Iload1);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Iload2);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Iload3);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Imul);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Ineg);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Instanceof(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Invokedynamic(258, 0, 0));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Invokeinterface(258, 3, 0));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Invokespecial(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Invokestatic(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Invokevirtual(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Ior);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Irem);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Ireturn);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Ishl);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Ishr);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Istore(1));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Istore0);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Istore1);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Istore2);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Istore3);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Isub);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Iushr);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Ixor);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Jsr(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::JsrW(16909060));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::L2d);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::L2f);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::L2i);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Ladd);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Laload);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Land);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Lastore);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Lcmp);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Lconst0);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Lconst1);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Ldc(1));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::LdcW(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Ldc2W(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Ldiv);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Lload(1));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Lload0);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Lload1);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Lload2);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Lload3);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Lmul);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Lneg);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Lor);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Lrem);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Lreturn);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Lshl);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Lshr);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Lstore(1));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Lstore0);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Lstore1);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Lstore2);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Lstore3);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Lsub);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Lushr);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Lxor);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Monitorenter);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Monitorexit);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Multianewarray(258, 3));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::New(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Newarray(1));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Nop);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Pop);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Pop2);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Putfield(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Putstatic(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Ret(1));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Return);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Saload);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Sastore);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Sipush(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::Swap);
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::WideIload(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::WideFload(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::WideAload(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::WideLload(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::WideDload(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::WideIstore(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::WideFstore(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::WideAstore(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::WideLstore(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::WideDstore(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::WideRet(258));
+        let (input, instruction) = parse_instruction(input).unwrap();
+        assert_eq!(instruction, Instruction::WideIinc(258, 772));
+
+        assert_eq!(input.len(), 0);
     }
 }
