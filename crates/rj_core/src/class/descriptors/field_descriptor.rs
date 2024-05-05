@@ -13,6 +13,7 @@ pub enum FieldType<'a> {
     Boolean,
     Object(&'a [u8]),
     Array(Box<FieldType<'a>>),
+    Void,
 }
 
 fn parse_base_type(input: &[u8]) -> Result<(&[u8], FieldType), ClassParseError> {
