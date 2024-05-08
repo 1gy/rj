@@ -4,10 +4,10 @@ use super::{constant::Constant, parse_attribute, Attribute, ClassParseError, Fie
 
 #[derive(Debug, PartialEq)]
 pub struct Field<'a> {
-    access_flags: FieldAccessFlags,
-    name_index: u16,
-    descriptor_index: u16,
-    attributes: Vec<Attribute<'a>>,
+    pub access_flags: FieldAccessFlags,
+    pub name_index: u16,
+    pub descriptor_index: u16,
+    pub attributes: Vec<Attribute<'a>>,
 }
 
 pub fn parse_field<'a>(
