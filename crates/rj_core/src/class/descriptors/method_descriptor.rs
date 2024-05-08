@@ -13,21 +13,21 @@ fn parse_return_type(input: &[u8]) -> Result<(&[u8], FieldType), ClassParseError
     match tag {
         b'V' => Ok((rest, FieldType::Void)),
         _ => {
-            let (rest, field_type) = parse_field_type(rest)?;
+            let (rest, field_type) = parse_field_type(input)?;
             Ok((rest, field_type))
         }
     }
 }
 
 pub fn parse_method_descriptor(input: &[u8]) -> Result<(&[u8], MethodDescriptor), ClassParseError> {
-    let (rest, _) = be_u8(input)?;
-    let (rest, parameters) = parse_field_type(rest)?;
-    let mut parameter_types = vec![parameters];
+    let (rest, _) = be_u8(input)?; // '('
+    let mut parameter_types: Vec<FieldType> = vec![];
     let mut rest = rest;
     while let Ok((new_rest, field_type)) = parse_field_type(rest) {
         parameter_types.push(field_type);
         rest = new_rest;
     }
+    let (rest, _) = be_u8(rest)?; // ')'
     let (rest, return_type) = parse_return_type(rest)?;
     Ok((
         rest,
@@ -43,6 +43,15 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_parse_return_type() {
+        let input = b"Ljava/lang/Object;";
+        let expected = FieldType::Object(b"java/lang/Object");
+        let (rest, result) = parse_return_type(input).unwrap();
+        assert_eq!(rest, b"");
+        assert_eq!(result, expected);
+    }
+
+    #[test]
     fn test_parse_method_descriptor() {
         let input = b"(IDLjava/lang/Thread;)Ljava/lang/Object;";
         let expected = MethodDescriptor {
@@ -52,6 +61,18 @@ mod tests {
                 FieldType::Object(b"java/lang/Thread"),
             ],
             return_type: FieldType::Object(b"java/lang/Object"),
+        };
+        let (rest, result) = parse_method_descriptor(input).unwrap();
+        assert_eq!(rest, b"");
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_parse_method_descriptor_void() {
+        let input = b"()V";
+        let expected = MethodDescriptor {
+            parameters: vec![],
+            return_type: FieldType::Void,
         };
         let (rest, result) = parse_method_descriptor(input).unwrap();
         assert_eq!(rest, b"");
