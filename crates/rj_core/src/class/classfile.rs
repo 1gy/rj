@@ -9,17 +9,17 @@ use super::method::{parse_method, Method};
 
 #[derive(Debug, PartialEq)]
 pub struct ClassFile<'a> {
-    magic: u32,
-    minor_version: u16,
-    major_version: u16,
-    constant_pool: Vec<Constant<'a>>,
-    access_flags: ClassAccessFlags,
-    this_class: u16,
-    super_class: u16,
-    interfaces: Vec<u16>,
-    fields: Vec<Field<'a>>,
-    methods: Vec<Method<'a>>,
-    attributes: Vec<Attribute<'a>>,
+    pub magic: u32,
+    pub minor_version: u16,
+    pub major_version: u16,
+    pub constant_pool: Vec<Constant<'a>>,
+    pub access_flags: ClassAccessFlags,
+    pub this_class: u16,
+    pub super_class: u16,
+    pub interfaces: Vec<u16>,
+    pub fields: Vec<Field<'a>>,
+    pub methods: Vec<Method<'a>>,
+    pub attributes: Vec<Attribute<'a>>,
 }
 
 pub fn parse_classfile(input: &[u8]) -> Result<(&[u8], ClassFile), ClassParseError> {

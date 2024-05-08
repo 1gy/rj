@@ -7,10 +7,10 @@ use super::error::ClassParseError;
 
 #[derive(Debug, PartialEq)]
 pub struct Method<'a> {
-    access_flags: MethodAccessFlags,
-    name_index: u16,
-    descriptor_index: u16,
-    attributes: Vec<Attribute<'a>>,
+    pub access_flags: MethodAccessFlags,
+    pub name_index: u16,
+    pub descriptor_index: u16,
+    pub attributes: Vec<Attribute<'a>>,
 }
 
 pub fn parse_method<'a>(

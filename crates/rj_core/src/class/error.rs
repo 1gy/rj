@@ -8,6 +8,7 @@ pub enum ClassParseError {
     Utf8Error(FromUtf8Error),
     InvalidConstantTag(u8),
     InvalidConstantPoolIndex(u16),
+    InvalidFieldDescriptor,
 }
 
 impl From<parser::ParseError> for ClassParseError {

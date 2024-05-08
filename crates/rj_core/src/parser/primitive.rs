@@ -104,6 +104,16 @@ pub fn be_f64(input: &[u8]) -> Result<(&[u8], f64), ParseError> {
     Ok((rest, value))
 }
 
+pub fn take_until<'a>(input: &'a [u8], bytes: &[u8]) -> Result<(&'a [u8], &'a [u8]), ParseError> {
+    let position = input
+        .windows(bytes.len())
+        .position(|window| window == bytes)
+        .ok_or(ParseError::Eof)?;
+    let (value, rest) = input.split_at(position);
+    let rest = &rest[bytes.len()..];
+    Ok((rest, value))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -272,6 +282,21 @@ mod tests {
         assert_eq!(value, -1.234_567);
 
         let result = be_f64(&[0xbf, 0xf3, 0xc0, 0xc9, 0x53, 0x9b, 0x88]);
+        assert_eq!(result, Err(ParseError::Eof));
+    }
+
+    #[test]
+    fn test_take_until() {
+        let input = [1, 2, 3, 4, 5];
+        let (rest, value) = take_until(&input, &[3, 4]).unwrap();
+        assert_eq!(rest, [5]);
+        assert_eq!(value, [1, 2]);
+
+        let (rest, value) = take_until(&input, &[1, 2]).unwrap();
+        assert_eq!(rest, [3, 4, 5]);
+        assert_eq!(value, []);
+
+        let result = take_until(&input, &[6, 7]);
         assert_eq!(result, Err(ParseError::Eof));
     }
 }
